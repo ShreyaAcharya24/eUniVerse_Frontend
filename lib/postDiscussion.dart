@@ -2,13 +2,15 @@
 // ignore_for_file: camel_case_types
 
 import 'dart:convert';
+import 'dart:ffi';
 
-import 'package:GLSeUniVerse/alumni_home_page.dart';
+import 'package:GLSeUniVerse/alumni_home.dart';
 import 'package:GLSeUniVerse/colors.dart';
 import 'package:GLSeUniVerse/users.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class postDiscussion extends StatefulWidget {
@@ -19,6 +21,9 @@ class postDiscussion extends StatefulWidget {
 }
 
 class _postDiscussionState extends State<postDiscussion> {
+
+
+
   TextEditingController pdiscuss = TextEditingController();
   TextEditingController ptitle = TextEditingController();
   @override
@@ -44,28 +49,11 @@ class _postDiscussionState extends State<postDiscussion> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // SizedBox(
-                //   height: 50,
-                // ),
-                // Container(
-                //   padding: EdgeInsets.all(8),
-                //   decoration: BoxDecoration(
-                //       color: white, borderRadius: BorderRadius.circular(10)),
-                //   child: Text(
-                //     "Post Discussion",
-                //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                //   ),
-                // ),
+                
                 SizedBox(
                   height: 25,
                 ),
-                // Container(
-                //   width: 350,
-                //   child: TextField(
-                //     controller: ptitle,
-                //     decoration: InputDecoration(labelText: "Title"),
-                //   ),
-                // ),
+                
                 TextField(
                   controller: ptitle,
                   // maxLines: 10,
@@ -92,19 +80,21 @@ class _postDiscussionState extends State<postDiscussion> {
                   padding: const EdgeInsets.all(10),
                   child: ElevatedButton(
                     onPressed: () async {
+                      final SharedPreferences prefs = await SharedPreferences.getInstance();
+                      int? id = prefs.getInt('id');
                       String post_title = ptitle.text;
                       String post_content = pdiscuss.text;
                       print(post_title);
                       print(post_content);
-                      print(finalEnrollment);
+                      print(id);
                       //checkrole = role!;
                       var headers = {'Content-Type': 'application/json'};
                       var request = http.Request(
                           'POST',
                           Uri.parse(
-                              'https://poojan16.pythonanywhere.com/api/createPost/'));
+                              'http://shreya42.pythonanywhere.com/create-post/'));
                       request.body = json.encode({
-                        "username": "$finalEnrollment",
+                        "id": "$id",
                         "post_title": "$post_title",
                         "post_content": "$post_content"
                       });
@@ -127,7 +117,7 @@ class _postDiscussionState extends State<postDiscussion> {
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => alumni_home_page(),
+                              builder: (context) => alumni_home(),
                             ));
                       } else {
                         print("Not valid!!!");
@@ -140,12 +130,6 @@ class _postDiscussionState extends State<postDiscussion> {
                             gravity: ToastGravity.BOTTOM,
                             fontSize: 16.0);
                       }
-
-                      // Navigator.pushReplacement(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //       builder: (context) => homePage(),
-                      //     ));
                     },
                     child: Text(
                       "Post Your Discussion",
@@ -159,37 +143,6 @@ class _postDiscussionState extends State<postDiscussion> {
                     ),
                   ),
                 ),
-
-                // Container(
-                //   width: 420,
-                //   padding: EdgeInsets.all(8),
-                //   decoration: BoxDecoration(
-                //     borderRadius: BorderRadius.circular(10),
-                //     color: white,
-                //   ),
-                //   child: Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //     children: [
-                //       TextButton.icon(
-                //         onPressed: () {
-                //           Navigator.push(context, MaterialPageRoute(
-                //             builder: (context) {
-                //               return CameraApp();
-                //             },
-                //           ));
-                //         },
-                //         icon: Icon(
-                //           Icons.camera_alt,
-                //           color: Colors.black,
-                //         ),
-                //         label: Text(
-                //           "Upload",
-                //           style: TextStyle(color: Colors.black),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
               ],
             ),
           ),

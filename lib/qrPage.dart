@@ -6,7 +6,8 @@ import 'package:GLSeUniVerse/users.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 class qrPage extends StatefulWidget {
   const qrPage({super.key});
 
@@ -17,10 +18,15 @@ class qrPage extends StatefulWidget {
 class _qrPageState extends State<qrPage> {
   int myIndex = 0;
   //String qr = users.qr_code;
+  String? qrCodeBase64;
+  String? id;
+  String? user_role;
+  String? name;
   @override
   void initState(){
     super.initState();
     FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+    _getQR();
   }
   @override
   void dispose(){
@@ -30,33 +36,60 @@ class _qrPageState extends State<qrPage> {
 
     super.dispose();
   }
+
+  Future<void> _getQR() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? accessToken = prefs.getString('access');
+    String? role = prefs.getString('role');
+
+    if (accessToken != null && role != null) {
+      final headers = {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      };
+      
+      var request = http.Request('POST',Uri.parse('https://shreya42.pythonanywhere.com/generate-qr/'));
+      request.headers.addAll(headers);
+      request.body = json.encode({'role': role});
+
+      try {
+        final response = await request.send();
+        final responseData = jsonDecode(await response.stream.bytesToString());
+        if (response.statusCode == 200) {
+          // Handle the successful response here
+            qrCodeBase64 = responseData['qr_code'];
+            id = responseData['id'];
+            user_role = responseData['role'];
+            name = responseData['name'];
+           setState(() {
+          });
+          print('API Response: $responseData');
+        } else {
+          // Handle the error here
+          print('Failed to call API: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error calling API: $e');
+      }
+    } else {
+      // Handle the case where the token or role is missing
+      print('Access token or role is missing');
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primary,
-      // bottomNavigationBar: BottomNavigationBar(
-      //   selectedItemColor: CupertinoColors.activeBlue,
-      //   onTap: (index) {
-      //     setState(() {
-      //       myIndex = index;
-      //     });
-
-      //     if (index == 0) {
-      //       Get.toNamed('/qrPage');
-      //     } else if (index == 1) {
-      //       Get.toNamed('/studentHomePage');
-      //     } else if (index == 2) {
-      //       Get.toNamed('/barcodePage');
-      //     }
-      //   },
-      //   currentIndex: myIndex,
-      //   items: [
-      //     BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: 'QR Code'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      //     BottomNavigationBarItem(
-      //         icon: Icon(Icons.bar_chart_sharp), label: 'Barcode'),
-      //   ],
-      // ),
+      appBar: AppBar(
+        title: Text(
+          "QR Page",
+          style: TextStyle(color: white),
+        ),
+        backgroundColor: mainFontColor,
+      ),
+      backgroundColor: arrowbgColor,
+      // backgroundColor: primary,
       body: SingleChildScrollView(
         child: Center(
           child: Container(
@@ -65,115 +98,97 @@ class _qrPageState extends State<qrPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                //student Image
-                CircleAvatar(
-                  radius: 50,
-                  //backgroundImage: AssetImage('images/profile.png'),
-                  //backgroundImage: NetworkImage(
-                     // "https://images.unsplash.com/photo-1531256456869-ce942a665e80?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MTI4fHxwcm9maWxlfGVufDB8fDB8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60"),
-
-                  child: ImageFromBase64String(base64String: '$finalprofile'),
+                SizedBox( 
+                  height: 10,
                 ),
-                //ImageFromBase64String(base64String: users.qr_code),
+                name != null
+                    ? Text(
+                        '$name',
+                        style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold,color: mainFontColor),
+                      ): const SizedBox.shrink(),
+                
+                SizedBox(
+                  height: 12,
+                ),
+                qrCodeBase64 != null
+                    ? Container(
+                        height: 280,
+                        child: Image.memory(
+                                          base64Decode(qrCodeBase64!),
+                                          fit: BoxFit.cover,
+                                        ),
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox( 
+                  height: 10,
+                ),
+  //            Role
+                user_role != null
+                    ? Text(
+                        '$user_role',
+                        style: const TextStyle(fontSize: 20, color:black,fontWeight: FontWeight.bold),
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox(
+                  height: 4,
+                ),
+                // Id
+                id != null
+                    ? Text(
+                        '$id',
+                        style: const TextStyle(fontSize: 25,color: mainFontColor,fontWeight: FontWeight.bold),
+                      )
+                    : const SizedBox.shrink(),
                 SizedBox(
                   height: 10,
                 ),
-                // student Name
-                Text(
-                  //users.name,
-                  '$finalName',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                // Qr Code
-                // Image(
-                //   child: ImageFromBase64String(base64String: users.qr_code),
-                //   height: 250,
+                
+                // Container(
+                //   padding: EdgeInsets.all(8),
+                //   width: 350,
+                //   decoration: BoxDecoration(
+                //       color: buttoncolor,
+                //       borderRadius: BorderRadius.circular(10),
+                //       boxShadow: [
+                //         BoxShadow(
+                //           color: grey.withOpacity(0.03),
+                //           spreadRadius: 10,
+                //           blurRadius: 3,
+                //           // changes position of shadow
+                //         ),
+                //       ]),
+                //   child: Center(
+                //       child:
+                //           //Department
+                //           Text(
+                //               '$finaldepartment' + ' - ' + '$finaldept_abbr',
+                //               style: TextStyle(color: white))),
                 // ),
-
-                Container(
-                  //child:ImageFromBase64String(base64String: ''),
-                  child: ImageFromBase64String(base64String: '$finalqr_code'),
-                  height: 250,
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                // Enrollment no of student
-                Text(
-                  //users.enrollment,
-                  '$finalEnrollment',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  height: 5,
-                ),
-                // student Email
-                Text(
-                  '$finalEmail',
-                  style: TextStyle(fontSize: 15, color: Colors.grey),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  width: 350,
-                  decoration: BoxDecoration(
-                      color: buttoncolor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grey.withOpacity(0.03),
-                          spreadRadius: 10,
-                          blurRadius: 3,
-                          // changes position of shadow
-                        ),
-                      ]),
-                  child: Center(
-                      child:
-                          //Department
-                          Text(
-                              //users.department +' - '+ users.dept_abbr,
-                              '$finaldepartment' + ' - ' + '$finaldept_abbr',
-                              style: TextStyle(color: white))),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  width: 350,
-                  decoration: BoxDecoration(
-                      color: buttoncolor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grey.withOpacity(0.03),
-                          spreadRadius: 10,
-                          blurRadius: 3,
-                          // changes position of shadow
-                        ),
-                      ]),
-                  child: Text(
-                    //users.course_name +'\nBatch: '+ users.batch_start_year ,
-                    '$finalcourse_name' +
-                        '\nBatch: ' +
-                        '$finalbatch_start_year',
-                    style: TextStyle(color: white),
-                  ),
-                ),
                 // SizedBox(
                 //   height: 20,
                 // ),
-                // ElevatedButton(
-                //     onPressed: () {
-                //       Get.toNamed('/barcodePage');
-                //     },
-                //     child: Text('Barcode Page'))
-              ],
+                // Container(
+                //   padding: EdgeInsets.all(8),
+                //   width: 350,
+                //   decoration: BoxDecoration(
+                //       color: buttoncolor,
+                //       borderRadius: BorderRadius.circular(10),
+                //       boxShadow: [
+                //         BoxShadow(
+                //           color: grey.withOpacity(0.03),
+                //           spreadRadius: 10,
+                //           blurRadius: 3,
+                //           // changes position of shadow
+                //         ),
+                //       ]),
+                //   child: Text(
+                //     '$finalcourse_name' +
+                //         '\nBatch: ' +
+                //         '$finalbatch_start_year',
+                //     style: TextStyle(color: white),
+                //   ),
+                // ),
+                ],
             ),
           ),
         ),
@@ -182,18 +197,3 @@ class _qrPageState extends State<qrPage> {
   }
 }
 
-class ImageFromBase64String extends StatelessWidget {
-  final String base64String;
-  const ImageFromBase64String({Key? key, required this.base64String})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Image.memory(
-        base64Decode(base64String),
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-}

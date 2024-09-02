@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 import 'package:GLSeUniVerse/colors.dart';
+import 'package:GLSeUniVerse/qrPage.dart';
 import 'package:GLSeUniVerse/staff_Homepage.dart';
-import 'package:GLSeUniVerse/staff_qr.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +20,7 @@ class _staff_homeState extends State<staff_home> {
   int pageIndex = 1;
 
   List<Widget> pages = [
-    staff_qr(),
+    qrPage(),
     staff_Homepage(),
     barcodePage(),
   ];

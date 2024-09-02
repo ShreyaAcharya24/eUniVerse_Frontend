@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:GLSeUniVerse/ErrorPage.dart';
 import 'package:GLSeUniVerse/colors.dart';
 import 'package:GLSeUniVerse/loader.dart';
 import 'package:GLSeUniVerse/loginPage.dart';
+import 'package:GLSeUniVerse/qr_code_service.dart';
 import 'package:GLSeUniVerse/users.dart';
 import 'package:GLSeUniVerse/visitorEntryPage.dart';
 import 'package:GLSeUniVerse/visitorInView.dart';
@@ -12,6 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:http/http.dart' as http;
+import 'package:GLSeUniVerse/qr_code_service.dart'; // Adjust the path as necessary
 
 class securityPage extends StatefulWidget {
   const securityPage({super.key});
@@ -21,49 +24,68 @@ class securityPage extends StatefulWidget {
 }
 
 class _securityPageState extends State<securityPage> {
+// Example of a simple loader dialog
+  void showLoaderDialog(BuildContext context) {
+    AlertDialog alert = AlertDialog(
+      content: Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(
+              margin: EdgeInsets.only(left: 7), child: Text("Loading...")),
+        ],
+      ),
+    );
+
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   TextEditingController _enroll = TextEditingController();
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Scaffold(
+      appBar: AppBar(
+         title: Text(
+          "Security Home",
+          style: TextStyle(color: white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: mainFontColor,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            iconSize: 32,
+            onPressed: () async {
+              final SharedPreferences sharedPreferences =
+                  await SharedPreferences.getInstance();
+              await sharedPreferences.clear();
+              print('Logged out successfully!');
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => loginPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              height: 100,
+              height: 80,
             ),
-            CircleAvatar(
-              radius: 80,
-              //backgroundImage: AssetImage('images/profile.png'),
-              backgroundImage: NetworkImage(
-                  "https://images.unsplash.com/photo-1531256456869-ce942a665e80?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MTI4fHxwcm9maWxlfGVufDB8fDB8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60"),
-            ),
-            SizedBox(
-              height: 50,
-            ),
+
             Center(
               child: Container(
-                  //   width: 350,
-                  //   height: 50,
-                  //   padding: EdgeInsets.only(left: 14, bottom: 10, right: 14),
-                  //   decoration: BoxDecoration(
-                  //     color: Color.fromARGB(255, 221, 237, 245),
-                  //     borderRadius: BorderRadius.circular(40),
-                  //   ),
-                  //   child: TextField(
-                  //     controller: _enroll,
-                  //     cursorColor: black,
-                  //     style: TextStyle(
-                  //         fontSize: 17, fontWeight: FontWeight.w500, color: black),
-                  //     decoration: InputDecoration(
-                  //         prefixIcon: Icon(Icons.email_outlined),
-                  //         prefixIconColor: black,
-                  //         hintText: "Enrollment Number",
-                  //         border: InputBorder.none),
-                  //   ),
-                  // ),
-
                   width: double.infinity,
                   margin: EdgeInsets.symmetric(horizontal: 25),
                   decoration: BoxDecoration(
@@ -74,7 +96,6 @@ class _securityPageState extends State<securityPage> {
                           color: grey.withOpacity(0.03),
                           spreadRadius: 10,
                           blurRadius: 3,
-                          // changes position of shadow
                         ),
                       ]),
                   child: Padding(
@@ -100,109 +121,14 @@ class _securityPageState extends State<securityPage> {
                           decoration: InputDecoration(
                               prefixIcon: Icon(Icons.numbers_outlined),
                               prefixIconColor: black,
-                              hintText: "Search Username",
+                              hintText: "Search by Username",
                               border: InputBorder.none),
                         ),
                         SizedBox(
                           height: 10,
                         ),
                         GestureDetector(
-                          onTap: () async {
-                            print("Pressed");
-                            final username = _enroll.text;
-                            print(username);
-                            var headers = {
-                                    'Content-Type': 'application/json'
-                                  };
-                                  var request = http.Request(
-                                      'GET',
-                                      Uri.parse(
-                                          'https://poojan16.pythonanywhere.com/api/searchUser/'));
-                                  request.body = json.encode({
-                                    "username": "$username",
-                                    });
-
-                                   request.headers.addAll(headers);
-                                  // http.StreamedResponse response = await request.send();
-                                  final response = await request.send();
-                                  if (response.statusCode == 200) {
-                                      print("Data Found");
-
-                                       //print(await response.stream.bytesToString());
-                                      final qrdata = jsonDecode(await response.stream.bytesToString());
-                                      print(qrdata);
-                                      //print(qrdata['data']['name']);
-                                      //print(qrdata['data']['department']);
-
-                                      finalqr_name = qrdata['data']['name'];
-                                      finalqr_department = qrdata['data']['department'];
-                                      finalqr_program = qrdata['data']['program'];
-
-                                      Navigator.push(context,
-                                      MaterialPageRoute(
-                                      builder: (context) => loader()));
-
-                                      
-                                      if(qr_role == 'Staff'){
-
-                                        finalqr_name = qrdata['data']['name'];
-                                        finalqr_department = qrdata['data']['department'];
-                                        finalqr_program = 'Not Applicable';
-                                        finalqr_profile = qrdata['data']['profile'];
-
-                                        Navigator.push(context,
-                                        MaterialPageRoute(
-                                        builder: (context) => loader()));
-                                      }
-                                      else if(qr_role == 'Student' || qr_role == 'Alumni')
-                                      {
-                                        finalqr_name = qrdata['data']['name'];
-                                        finalqr_department = qrdata['data']['department'];
-                                        finalqr_program = qrdata['data']['program'];
-                                        finalqr_profile = qrdata['data']['profile'];
-
-                                        Navigator.push(context,
-                                        MaterialPageRoute(
-                                        builder: (context) => loader()));
-
-                                      }
-                                      // print(finalqr_name);
-                                      // print(finalqr_department);
-                                      // print(finalqr_program);
-      
-                                  }
-                                  else if(response.statusCode == 404){
-                                      print("Invalid Data");
-
-                                       //print(await response.stream.bytesToString());
-                                      final qrdata = jsonDecode(await response.stream.bytesToString());
-                                      print(qrdata);
-                                      Fluttertoast.showToast(
-                                      msg: qrdata['msg'],
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      fontSize: 16.0);
-                                        
-                                      
-                                  }
-                                  else {
-                                        print("User Not Found");
-                                        Fluttertoast.showToast(
-                                        msg: 'Something Went Wrong',
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        fontSize: 16.0);
-                                        print(response.reasonPhrase);
-                                  }
-
-
-
-                            // Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (context) => userDetails(),
-                            //     ));
-                          },
+                          onTap: () async {},
                           child: Container(
                             padding: EdgeInsets.all(16),
                             margin: EdgeInsets.symmetric(horizontal: 25),
@@ -231,6 +157,7 @@ class _securityPageState extends State<securityPage> {
               height: 50,
             ),
 
+// ************** QR Code Scanner ********************
             Container(
               height: 320,
               child: SingleChildScrollView(
@@ -241,125 +168,62 @@ class _securityPageState extends State<securityPage> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //       builder: (context) => QRCodeScannerScreen(),
-                              //     ));
-                              var res = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SimpleBarcodeScannerPage(),
-                                  ));
-                              setState(() async {
-                                if (res is String && res.isNotEmpty) {
-                                  final data = jsonDecode(res);
-                                  // final username;
-                                  // final role;
-                                  // final key;
+                              // Navigate to the barcode scanner page and get the scanned string
+                              final scannedQRCode = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const SimpleBarcodeScannerPage(),
+                                ),
+                              );
 
-                                  //final username = data['']
-                                  print(data);
-                                  
-                                  if(data['role'] == 'Student' || data['role'] == "Alumni")
-                                  {
-                                    qr_username = data['enrolment'];
-                                    qr_role = data['role'];
-                                    qr_key = data['key'];
-                                  
-                                  }
-                                  else if(data['role'] == 'Staff')
-                                  {
-                                    qr_username = data['email'];
-                                    qr_role = data['role'];
-                                    qr_key = data['key'];
-                                  
-                                  }
-                                  print(qr_username);
-                                  // result = res;
-                                  print(data);
-                                  //print(data['enrolment']);
-                                  final username = qr_username;
-                                  final role = qr_role;
-                                  final key = qr_key;
-                                  var headers = {
-                                    'Content-Type': 'application/json'
-                                  };
-                                  var request = http.Request(
-                                      'POST',
-                                      Uri.parse(
-                                          'https://poojan16.pythonanywhere.com/api/verifyUser/'));
-                                  request.body = json.encode({
-                                    "username": "$username",
-                                    "key": "$key",
-                                    "role": "$role",
-                                  });
+                              // Check if the scanning was successful
+                              if (scannedQRCode != null &&
+                                  scannedQRCode is String &&
+                                  scannedQRCode.isNotEmpty) {
+                                print(
+                                    "\n\n***** QR scanned **** ${scannedQRCode} ***\n");
+                                // Show loader or progress indicator while processing
+                                showLoaderDialog(context);
 
-                                   request.headers.addAll(headers);
-                                  // http.StreamedResponse response = await request.send();
-                                  final response = await request.send();
-                                  if (response.statusCode == 500) { 
-                                      print("QR Data Found");
+                                // Call the API method with the scanned QR code data
+                                final response = await QRCodeService.scanQRCode(
+                                    scannedQRCode);
 
-                                       //print(await response.stream.bytesToString());
-                                      final qrdata = jsonDecode(await response.stream.bytesToString());
-                                      print(qrdata);
-                                      //print(qrdata['data']['name']);
-                                      //print(qrdata['data']['department']);
-                                      
-                                      if(qr_role == 'Staff'){
+                                // Hide the loader once the API call is completed
+                                Navigator.pop(context);
 
-                                        finalqr_name = qrdata['data']['name'];
-                                        finalqr_department = qrdata['data']['department'];
-                                        finalqr_program = 'Not Applicable';
-                                        finalqr_profile = qrdata['data']['profile'];
-
-                                        Navigator.push(context,
-                                        MaterialPageRoute(
-                                        builder: (context) => loader()));
-                                      }
-                                      else if(qr_role == 'Student' || qr_role == 'Alumni')
-                                      {
-                                        finalqr_name = qrdata['data']['name'];
-                                        finalqr_department = qrdata['data']['department'];
-                                        finalqr_program = qrdata['data']['program'];
-                                        finalqr_profile = qrdata['data']['profile'];
-
-                                        Navigator.push(context,
-                                        MaterialPageRoute(
-                                        builder: (context) => loader()));
-
-                                      }
-                                      // print(finalqr_name);
-                                      // print(finalqr_department);
-                                      // print(finalqr_program);
-      
-                                  }
-                                  else {
-                                    // AwesomeDialog(
-                                    //   context: context,
-                                    //   dialogType: DialogType.error,
-                                    //   animType: AnimType.topSlide,
-                                    //   showCloseIcon: true,
-                                    //   title: response.reasonPhrase,
-                                    //   btnOkOnPress: (){},
-                                    //   btnOkIcon: Icons.cancel,
-                                    //   btnOkColor: buttoncolor, 
-
-                                    // ).show();
-                                    //     
-                                    print("User Not Found");
-                                    Fluttertoast.showToast(
-                                    msg: 'Invalid QR!!!',
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    fontSize: 16.0);
-                                    print(response.reasonPhrase);
-                                  }
+                                // Handle the API response
+                                if (response.containsKey('error')) {
+                                  // Navigate to the ErrorPage
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ErrorPage(
+                                            message: "QR code is not valid"),
+                                      ));
+                                } else {
+                                  // Handle the successful response
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => Loader(
+                                          responseData:
+                                              response), // Navigate to the loader screen
+                                    ),
+                                  );
                                 }
-                              });
-                              print("1st Clicked");
+                              } else {
+                                // Show a message if the scanning is canceled or failed
+                                Fluttertoast.showToast(
+                                  msg:
+                                      "QR code scanning was canceled or failed",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  backgroundColor: Colors.orange,
+                                  textColor: Colors.white,
+                                );
+                              }
                             },
                             child: Container(
                               height: 100,
@@ -418,38 +282,9 @@ class _securityPageState extends State<securityPage> {
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                              // SizedBox(
-                                              //   height: 5,
-                                              // ),
-                                              // Text(
-                                              //   "Receiving Payment from company",
-                                              //   style: TextStyle(
-                                              //       fontSize: 12,
-                                              //       color: black
-                                              //           .withOpacity(0.5),
-                                              //       fontWeight:
-                                              //           FontWeight.w400),
-                                              // ),
                                             ]),
                                       ),
                                     ),
-                                    // Expanded(
-                                    //   child: Container(
-                                    //     child: Row(
-                                    //       mainAxisAlignment:
-                                    //           MainAxisAlignment.end,
-                                    //       children: [
-                                    //         Text(
-                                    //           "\$250",
-                                    //           style: TextStyle(
-                                    //               fontSize: 15,
-                                    //               fontWeight: FontWeight.bold,
-                                    //               color: black),
-                                    //         )
-                                    //       ],
-                                    //     ),
-                                    //   ),
-                                    // )
                                   ],
                                 ),
                               ),
@@ -530,32 +365,17 @@ class _securityPageState extends State<securityPage> {
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                              // SizedBox(
-                                              //   height: 5,
-                                              // ),
-                                              // Text(
-                                              //   "Receiving Payment from company",
-                                              //   style: TextStyle(
-                                              //       fontSize: 12,
-                                              //       color: black
-                                              //           .withOpacity(0.5),
-                                              //       fontWeight:
-                                              //           FontWeight.w400),
-                                              // ),
                                             ]),
                                       ),
                                     ),
-                                    
                                   ],
                                 ),
                               ),
                             ),
-
                           ),
                         ),
                       ],
                     ),
-
                     Row(
                       children: [
                         Expanded(
@@ -625,16 +445,13 @@ class _securityPageState extends State<securityPage> {
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                              
                                             ]),
                                       ),
                                     ),
-                                    
                                   ],
                                 ),
                               ),
                             ),
-                            
                           ),
                         ),
                       ],
@@ -642,18 +459,6 @@ class _securityPageState extends State<securityPage> {
                   ],
                 ),
               ),
-            ),
-            FloatingActionButton(onPressed: () async {
-              final SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-              await sharedPreferences.clear();
-              print('okay!');
-
-              Navigator.pushReplacement(context, MaterialPageRoute(
-                builder: (context) {
-                  return loginPage();
-                },
-              ));
-            }, child: Icon(Icons.logout),
             ),
           ],
         ),

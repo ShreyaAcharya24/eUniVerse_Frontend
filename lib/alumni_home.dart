@@ -4,21 +4,19 @@ import 'package:GLSeUniVerse/colors.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:GLSeUniVerse/barcodePage.dart';
-import 'package:GLSeUniVerse/main.dart';
 import 'package:GLSeUniVerse/qrPage.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 // import 'dart:ui' as ui;
 
-class alumni_home_page extends StatefulWidget {
-  const alumni_home_page({super.key});
+class alumni_home extends StatefulWidget {
+  const alumni_home({super.key});
 
   @override
-  State<alumni_home_page> createState() => _alumni_home_pageState();
+  State<alumni_home> createState() => _alumni_homeState();
 }
 
-class _alumni_home_pageState extends State<alumni_home_page> {
+class _alumni_homeState extends State<alumni_home> {
   int pageIndex = 1;
 
   List<Widget> pages = [
@@ -28,19 +26,17 @@ class _alumni_home_pageState extends State<alumni_home_page> {
   ];
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
   }
+
   @override
-  void dispose(){
-    FlutterWindowManager.clearFlags(
-      FlutterWindowManager.FLAG_SECURE
-    );
+  void dispose() {
+    FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
 
     super.dispose();
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +44,7 @@ class _alumni_home_pageState extends State<alumni_home_page> {
       backgroundColor: primary,
       body: getBody(),
       bottomNavigationBar: getFooter(),
-      );
+    );
   }
 
   Widget getBody() {

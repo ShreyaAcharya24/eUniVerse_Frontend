@@ -1,8 +1,9 @@
 // ignore_for_file: camel_case_types
 
 import 'dart:async';
-import 'package:GLSeUniVerse/alumni_home_page.dart';
+import 'package:GLSeUniVerse/alumni_home.dart';
 import 'package:GLSeUniVerse/colors.dart';
+import 'package:GLSeUniVerse/home.dart';
 import 'package:GLSeUniVerse/staff_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -34,14 +35,14 @@ class _loadScreenState extends State<loadScreen> {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => access.isEmpty ? loginPage() : HomePage(),
+                builder: (context) => access.isEmpty ? loginPage() : home(),
               ));
         } else if (role == 'Alumni') {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    access.isEmpty ? loginPage() : alumni_home_page(),
+                    access.isEmpty ? loginPage() : alumni_home(),
               ));
         } else if (role == 'Staff') {
           print("Entered in Staff");

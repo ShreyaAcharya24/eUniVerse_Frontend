@@ -13,6 +13,14 @@ class _visitorEntryState extends State<visitorEntry> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: AppBar(
+        title: Text(
+          "Add Visitor",
+          style: TextStyle(color: white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: mainFontColor,
+      ),
+      backgroundColor: arrowbgColor,
       // backgroundColor: primary,
       body: SingleChildScrollView(
         child: Padding(
@@ -21,7 +29,7 @@ class _visitorEntryState extends State<visitorEntry> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                height: 120,
+                height: 30,
               ),
               Center(
                 child: Container(
@@ -43,7 +51,7 @@ class _visitorEntryState extends State<visitorEntry> {
                 ),
               ),
               SizedBox(
-                height: 40,
+                height: 20,
               ),
               Container(
                 width: 420,

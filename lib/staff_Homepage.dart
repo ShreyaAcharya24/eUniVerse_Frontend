@@ -1,19 +1,10 @@
 // ignore_for_file: file_names
-
 import 'dart:convert';
-
+import 'package:GLSeUniVerse/side_navbar.dart';
 import 'package:GLSeUniVerse/colors.dart';
-import 'package:GLSeUniVerse/users.dart';
+import 'package:GLSeUniVerse/user_service.dart';
 import 'package:GLSeUniVerse/requestDocs.dart';
-// import 'package:GLSeUniVerse/securityHomePage.dart';
-import 'package:GLSeUniVerse/sideNavigation.dart';
 import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:GLSeUniVerse/barcodePage.dart';
-// import 'package:GLSeUniVerse/main.dart';
-// import 'package:GLSeUniVerse/qrPage.dart';
-// import 'package:icon_badge/icon_badge.dart';
-// import 'dart:ui' as ui;
 
 class staff_Homepage extends StatefulWidget {
   const staff_Homepage({super.key});
@@ -25,13 +16,61 @@ class staff_Homepage extends StatefulWidget {
 class _staff_HomepageState extends State<staff_Homepage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  String? finalName;
+  String? finalPicture;
+  String? finalEmail;
+  String? finalDep;
+  bool isLoading = true;
+  final UserService _userService = UserService();
+
+@override
+void initState() {
+  super.initState();
+  _loadUserProfile();
+}
+void _loadUserProfile() async {
+    try {
+      final data = await _userService.fetchUserProfile();
+      if (data != null) {
+        setState(() {
+          finalName = data['name'];
+          finalPicture = data['profile_picture'];
+          finalEmail = data['email'];
+          finalDep = data['program'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          finalName = 'Unknown User'; // Default or placeholder name
+          finalPicture = null;
+          finalEmail = null;
+          finalDep = null; // You might set a placeholder image here
+          isLoading = false;
+        });
+        print('*******Failed to fetch user profile. Data is null.');
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      print('An error occurred in fetchProfile: $error');
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Scaffold(
         backgroundColor: primary,
         key: _scaffoldKey,
-        drawer: sideNavigation(),
+        drawer: finalName != null && finalPicture != null
+            ? side_navbar(
+                finalName: finalName!,
+                finalPicture: finalPicture!,
+                finalEmail: finalEmail!,
+                )
+            : null,
         body: SafeArea(
             child: SingleChildScrollView(
           child: Column(
@@ -45,14 +84,14 @@ class _staff_HomepageState extends State<staff_Homepage> {
                     boxShadow: [
                       BoxShadow(
                         color: grey.withOpacity(0.03),
-                        spreadRadius: 10,
-                        blurRadius: 3,
+                        spreadRadius: 8,
+                        blurRadius: 2,
                         // changes position of shadow
                       ),
                     ]),
                 child: Padding(
                   padding: const EdgeInsets.only(
-                      top: 20, bottom: 0, right: 20, left: 20),
+                      top: 10, bottom: 0, right: 10, left: 10),
                   child: Column(
                     children: [
                       Row(
@@ -72,10 +111,16 @@ class _staff_HomepageState extends State<staff_Homepage> {
                       ),
                       Column(
                         children: [
+                          isLoading ? Center(child: CircularProgressIndicator()):
                           Container(
-                            width: 150,
-                            height: 150,
-                            child: ImageFromBase64String(base64String: '$finalprofile'),
+                            width: 180,
+                            height: 180,
+                            child: finalPicture != null
+                                      ? Image.memory(
+                                          base64Decode(finalPicture!),
+                                          fit: BoxFit.cover,
+                                        ):Container(),
+                            
                           ),
                           SizedBox(
                             height: 10,
@@ -85,7 +130,7 @@ class _staff_HomepageState extends State<staff_Homepage> {
                             child: Column(
                               children: [
                                 Text(
-                                  finalName,
+                                  finalName ?? '',
                                   style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
@@ -95,13 +140,23 @@ class _staff_HomepageState extends State<staff_Homepage> {
                                   height: 10,
                                 ),
                                 Text(
-                                  finalEmail,
+                                  finalDep ?? '',
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       color: black),
                                 ),
-                              ],
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  finalEmail ?? '',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: black),
+                                ),
+                                ],
                             ),
                           )
                         ],

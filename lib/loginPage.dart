@@ -55,11 +55,7 @@ class _loginPageState extends State<loginPage> {
       await sharedPreferences.setString('refresh', data['refresh']);
       await sharedPreferences.setString('access', data['access']);
       await sharedPreferences.setString('role', data['role']);
-
-      // Print stored values to check if they are stored correctly
-      //   print("\n^^^^^^^^  Refresh Token: ${sharedPreferences.getString('refresh')}^^^^^^^^^^^");
-      //   print("\n^^^^^^^^Access Token: ${sharedPreferences.getString('access')}^^^^^^^^^^^");
-      //   print("\n^^^^^^^^Role: ${sharedPreferences.getString('role')}^^^^^^^^^^^");
+      await sharedPreferences.setInt('id', data['id']);
 
       Navigator.pushReplacement(
           context,

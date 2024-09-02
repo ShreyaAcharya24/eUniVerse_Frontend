@@ -1,164 +1,129 @@
 import 'dart:convert';
-
 import 'package:GLSeUniVerse/colors.dart';
-import 'package:GLSeUniVerse/securityHomePage.dart';
-import 'package:GLSeUniVerse/users.dart';
 import 'package:flutter/material.dart';
 
-class userDetails extends StatefulWidget {
-  const userDetails({super.key});
+class UserDetails extends StatelessWidget {
+  final Map<String, dynamic> responseData;
 
-  @override
-  State<userDetails> createState() => _userDetailsState();
-}
+  const UserDetails({super.key, required this.responseData});
 
-class _userDetailsState extends State<userDetails> {
   @override
   Widget build(BuildContext context) {
+    // Determine if the user is a Student, Alumni, or Staff
+    bool isStudentOrAlumni =
+        responseData.containsKey('batch_s') && responseData.containsKey('batch_e');
+
     return Scaffold(
       backgroundColor: primary,
       body: SingleChildScrollView(
         child: Center(
           child: Container(
+            margin: EdgeInsets.fromLTRB(0, 30, 0, 20),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                //student Image
                 SizedBox(
-                  height: 120,
+                  height: 30,
                 ),
+                // Profile Image
                 Container(
-                  width: 150,
-                  height: 150,
-                  child: ImageFromBase64String(base64String: '$finalqr_profile'),
-                  // decoration: BoxDecoration(
-                  //     shape: BoxShape.circle,
-                  //     image: DecorationImage(
-                  //         image: NetworkImage(
-                  //             "https://images.unsplash.com/photo-1531256456869-ce942a665e80?ixid=MXwxMjA3fDB8MHxzZWFyY2h8MTI4fHxwcm9maWxlfGVufDB8fDB8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60"),
-                  //         fit: BoxFit.cover)),
+                  height: 230,
+                  child: Image.memory(
+                    base64Decode(responseData['profile_picture']!),
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 SizedBox(
                   height: 10,
                 ),
-                // student Name
+                // Displaying the full name
                 Text(
-                  finalqr_name,
+                  '${responseData['first_name']} ${responseData['last_name']}',
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(
                   height: 10,
                 ),
-                // Enrollment no of student
-                // Text(
-                //   finalEnrollment,
-                //   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                // ),
-                // SizedBox(
-                //   height: 5,
-                // ),
-                // // student Email
-                // Text(
-                //   finalEmail,
-                //   style: TextStyle(fontSize: 15, color: Colors.grey),
-                // ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  width: 350,
-                  decoration: BoxDecoration(
-                      color: buttoncolor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grey.withOpacity(0.03),
-                          spreadRadius: 10,
-                          blurRadius: 3,
-                          // changes position of shadow
-                        ),
-                      ]),
-                  child: Center(
-                      child:
-                          //Department
-                          Text(
-                    'Department Name: '+finalqr_department,
-                    style: TextStyle(color: white),
-                  )),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  width: 350,
-                  decoration: BoxDecoration(
-                      color: buttoncolor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grey.withOpacity(0.03),
-                          spreadRadius: 10,
-                          blurRadius: 3,
-                          // changes position of shadow
-                        ),
-                      ]),
-                  child: Center(
-                      //batch,course
-                      child: Text(
-                    "Course Name: " + finalqr_program,
-                    style: TextStyle(color: white),
-                  )),
-                ),
-
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  width: 350,
-                  decoration: BoxDecoration(
-                      color: buttoncolor,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grey.withOpacity(0.03),
-                          spreadRadius: 10,
-                          blurRadius: 3,
-                          // changes position of shadow
-                        ),
-                      ]),
-                  child: Center(
-                      //batch,course
-                      child: Text(
-                    "Role : " + finalqr_role,
-                    style: TextStyle(color: white),
-                  )),
-                ),
-                
-                SizedBox(
-                  height: 50,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Get.toNamed('/barcodePage');
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => securityPage(),
-                        ));
-                  },
-                  child: Text(
-                    'Approved',
-                    style: TextStyle(
-                        fontSize: 20,
-                        color: buttoncolor,
-                        fontWeight: FontWeight.bold),
+                // Enrollment No (only for Student and Alumni)
+                if (isStudentOrAlumni)
+                  Text(
+                    responseData['enrolment_no'].toString(),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  style: ElevatedButton.styleFrom(backgroundColor: white),
-                )
+                SizedBox(
+                  height: 20,
+                ),
+                // Display Batch or Joining and Department Name
+                Container(
+                  padding: EdgeInsets.all(8),
+                  width: 350,
+                  decoration: BoxDecoration(
+                    color: buttoncolor,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: grey.withOpacity(0.03),
+                        spreadRadius: 10,
+                        blurRadius: 3,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      isStudentOrAlumni
+                          ? "Batch: ${responseData['batch_s']} - ${responseData['batch_e']}"
+                          : "Department: ${responseData['department_name']}",
+                      style: TextStyle(color: white),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                // Display Program Name or Joining Date
+                Container(
+                  padding: EdgeInsets.all(8),
+                  width: 350,
+                  decoration: BoxDecoration(
+                    color: buttoncolor,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: grey.withOpacity(0.03),
+                        spreadRadius: 10,
+                        blurRadius: 3,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    isStudentOrAlumni
+                        ? '${responseData['program_name']}\n${responseData['program_abbr']}'
+                        : 'Joining Date: ${responseData['joining']}',
+                    style: TextStyle(color: white),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                // Verified Badge and Text
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.verified,
+                      color: Color.fromARGB(255, 22, 120, 40),
+                      size: 35,
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      'Verified',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -170,6 +135,7 @@ class _userDetailsState extends State<userDetails> {
 
 class ImageFromBase64String extends StatelessWidget {
   final String base64String;
+
   const ImageFromBase64String({Key? key, required this.base64String})
       : super(key: key);
 
@@ -183,4 +149,3 @@ class ImageFromBase64String extends StatelessWidget {
     );
   }
 }
-

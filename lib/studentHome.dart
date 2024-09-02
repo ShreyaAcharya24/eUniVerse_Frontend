@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:GLSeUniVerse/user_service.dart';
 
 class studentHome extends StatefulWidget {
   const studentHome({super.key});
@@ -18,51 +19,37 @@ class _studentHomeState extends State<studentHome> {
   String? finalName;
   String? finalPicture;
   bool isLoading = true;
+  final UserService _userService = UserService();
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserProfile();
-  }
-
-  Future<void> _fetchUserProfile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('access');
-    String? role = prefs.getString('role');
-
-    if (token != null && role != null) {
-      var headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json'
-      };
-
-    var request = http.Request('GET', Uri.parse('https://shreya42.pythonanywhere.com/user-profile/'));
-    // Add headers
-    request.headers.addAll(headers);
-
-    request.body = json.encode({'role': role});
-   
-    final response = await request.send();
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(await response.stream.bytesToString());
-        setState(() {
-          finalName = data['name'];
-          finalPicture = data['profile_picture'];
-          isLoading = false;
-        });
-      } else {
-        // Handle error
-        print('Failed to load profile data');
-        setState(() {
-          isLoading = false;
-        });
-      }
+@override
+void initState() {
+  super.initState();
+  _userService.fetchUserProfile().then((data) {
+    if (data != null) {
+      setState(() {
+        finalName = data['name'];
+        finalPicture = data['profile_picture'];
+        isLoading = false;
+      });
     } else {
-      // Handle missing token or role
-      print('Token or role is missing');
+      // Handle the case where fetchUserProfile returns null
+      setState(() {
+        finalName = 'Unknown User'; // Default or placeholder name
+        finalPicture = null; // You might set a placeholder image here
+        isLoading = false;
+      });
+      // Optionally, you can show a message to the user
+      print('Failed to fetch user profile. Data is null.');
     }
-  }
+  }).catchError((error) {
+    // Handle errors from the fetchUserProfile call
+    setState(() {
+      isLoading = false;
+    });
+    print('An error occurred in fetchProfile: $error');
+  });
+}
+ 
 
   @override
   Widget build(BuildContext context) {
